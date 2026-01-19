@@ -1,0 +1,51 @@
+{
+  "model": "qwen2.5:7b",
+  "framework": "LangGraph",
+  "context_before": {
+    "system_prompt_tokens": 42,
+    "messages_tokens": 20,
+    "tools_tokens": 0,
+    "tools_count": 0,
+    "total_tokens": 62
+  },
+  "context_after": {
+    "system_prompt_tokens": 42,
+    "messages_tokens": 20,
+    "tools_tokens": 158,
+    "tools_count": 2,
+    "total_tokens": 220,
+    "tools_schema": [
+      {
+        "name": "get_user_name",
+        "description": "Get the user name and their ID. Returns a dict with 'name' and 'id' keys.",
+        "parameters": {
+          "properties": {},
+          "title": "get_user_nameArguments",
+          "type": "object"
+        }
+      },
+      {
+        "name": "get_latest_news",
+        "description": "Get the latest news about a user. Requires the user's ID from get_user_name.",
+        "parameters": {
+          "properties": {
+            "id": {
+              "title": "Id",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "title": "get_latest_newsArguments",
+          "type": "object"
+        }
+      }
+    ]
+  },
+  "impact": {
+    "token_increase": 158,
+    "percentage_increase": 254.84
+  },
+  "final_answer": "The latest news for user ali (ID: 1) is that they are trying again."
+}
