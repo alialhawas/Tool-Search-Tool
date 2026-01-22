@@ -14,6 +14,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Callable, Any
 from enum import Enum
+from openai import OpenAI
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 try:
     import numpy as np
     from sentence_transformers import SentenceTransformer
@@ -167,7 +174,7 @@ class ToolSearchToolAdvisor:
     
     def __init__(
         self,
-        client: Anthropic,
+        client: OpenAI(),
         tool_searcher: ToolSearcher,
         model: str = "claude-sonnet-4-20250514",
         max_search_results: int = 5,
@@ -627,50 +634,3 @@ def create_example_tools() -> list[Tool]:
     ]
     
     return tools
-
-
-def main():
-    """Example demonstrating the Tool Search Tool pattern."""
-    
-    # Initialize Anthropic client
-    client = Anthropic()
-
-    client = ChatOpenAI(model="gpt-4o")
-    
-    
-    # Create tool searcher (use keyword-based for no extra dependencies)
-    # searcher = KeywordToolSearcher()
-    
-    # Or use vector search for better semantic matching:
-    searcher = VectorToolSearcher()
-    
-    # Create the advisor
-    advisor = ToolSearchToolAdvisor(
-        client=client,
-        tool_searcher=searcher,
-        model="claude-sonnet-4-20250514",
-        max_search_results=5
-    )
-    
-    tools = create_example_tools()
-    advisor.register_tools(tools)
-    
-    query = "Help me plan what to wear today in Amsterdam."
-    print("\n" + "="*60)
-    print(f"USER:{query}")
-    print("Please suggest clothing shops that are open right now.")
-    print("="*60)
-    
-    response = advisor.chat(
-        "Help me plan what to wear today in Amsterdam. "
-        "Please suggest clothing shops that are open right now."
-    )
-    
-    print("\n" + "="*60)
-    print("ASSISTANT:")
-    print("="*60)
-    print(response)
-
-
-if __name__ == "__main__":
-    main()
