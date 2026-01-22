@@ -65,6 +65,34 @@ def list_models():
     }
 
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+
+logger = logging.getLogger("chat-api")
+
+
+from fastapi import Request
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    body = await request.body()
+    logger.info(
+        f"Incoming request | {request.method} {request.url.path} | body={body.decode(errors='ignore')}"
+    )
+
+    response = await call_next(request)
+
+    logger.info(
+        f"Response status | {request.method} {request.url.path} | status={response.status_code}"
+    )
+
+    return response
+
+
 @app.post("/v1/chat/completions")
 def chat_completions(request: ChatRequest) -> ChatResponse:
     """OpenAI-compatible chat completions endpoint"""

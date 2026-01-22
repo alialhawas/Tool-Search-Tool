@@ -13,18 +13,12 @@ from openai import OpenAI
 
 load_dotenv()
 
-# MCP imports
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.stdio import stdio_client, StdioServerParameters
 
-# Reuse from main
 from main import Tool, VectorToolSearcher, ToolSearcher
 
-
-# =============================================================================
-# MCP TOOL LOADER
-# =============================================================================
 
 async def load_tools_from_mcp_sse(url: str) -> list[Tool]:
     """Load tools from an MCP server via SSE."""
@@ -34,16 +28,13 @@ async def load_tools_from_mcp_sse(url: str) -> list[Tool]:
         async with ClientSession(read, write) as session:
             await session.initialize()
 
-            # List available tools
             result = await session.list_tools()
 
             for mcp_tool in result.tools:
-                # Create a closure to capture the session and tool name
                 tool_name = mcp_tool.name
 
                 def make_executor(name: str, sess_url: str):
                     async def execute(**kwargs):
-                        # Need to reconnect for each call in sync context
                         async with sse_client(sess_url) as (r, w):
                             async with ClientSession(r, w) as s:
                                 await s.initialize()
@@ -51,7 +42,6 @@ async def load_tools_from_mcp_sse(url: str) -> list[Tool]:
                                 return result.content[0].text if result.content else str(result)
                     return lambda **kw: asyncio.get_event_loop().run_until_complete(execute(**kw))
 
-                # Extract parameters from input_schema
                 params = {}
                 if mcp_tool.inputSchema:
                     params = {
@@ -90,7 +80,6 @@ async def load_tools_from_mcp_stdio(command: str, args: list[str]) -> list[Tool]
                         "required": mcp_tool.inputSchema.get("required", [])
                     }
 
-                # Create mock function (actual execution would need session)
                 tool = Tool(
                     name=mcp_tool.name,
                     description=mcp_tool.description or f"Tool: {mcp_tool.name}",
@@ -101,11 +90,6 @@ async def load_tools_from_mcp_stdio(command: str, args: list[str]) -> list[Tool]
                 print(f"  Loaded: {tool.name} - {tool.description[:60]}...")
 
     return tools
-
-
-# =============================================================================
-# OPENAI ADVISOR (same as before)
-# =============================================================================
 
 class OpenAIToolSearchAdvisor:
     """Tool Search Tool pattern for OpenAI API."""
@@ -432,7 +416,8 @@ async def main():
         "total": advisor_all.total_input_tokens + advisor_all.total_output_tokens
     }
 
-    # Summary
+
+    
     print("\n" + "=" * 70)
     print(f"TOKEN COMPARISON ({len(all_tools)} MCP tools)")
     print("=" * 70)

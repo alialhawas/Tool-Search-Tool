@@ -13,17 +13,11 @@ from openai import OpenAI
 
 load_dotenv()
 
-# Reuse Tool and searcher from main
 from main import Tool, VectorToolSearcher, ToolSearcher, create_example_tools
-
-
-# =============================================================================
-# OPENAI-COMPATIBLE ADVISOR (WITH TOOL SEARCH)
-# =============================================================================
 
 class OpenAIToolSearchAdvisor:
     """
-    Tool Search Tool pattern for OpenAI API.
+    Tool Search Tool pattern.
     Sends only search_tools initially, discovers tools on demand.
     """
 
@@ -44,7 +38,6 @@ class OpenAIToolSearchAdvisor:
         self.all_tools: dict[str, Tool] = {}
         self.discovered_tools: dict[str, Tool] = {}
 
-        # Token tracking
         self.total_input_tokens = 0
         self.total_output_tokens = 0
         self.request_count = 0
@@ -163,7 +156,6 @@ class OpenAIToolSearchAdvisor:
             print(f"[Advisor] Tokens: in={response.usage.prompt_tokens}, out={response.usage.completion_tokens}")
 
             assistant_message = response.choices[0].message
-            breakpoint()
 
             # Check if done
             if not assistant_message.tool_calls:
@@ -176,7 +168,6 @@ class OpenAIToolSearchAdvisor:
             messages.append(assistant_message)
 
             for tool_call in assistant_message.tool_calls:
-                breakpoint()
 
                 tool_input = json.loads(tool_call.function.arguments)
                 result = self._handle_tool_call(tool_call.function.name, tool_input)
@@ -189,10 +180,6 @@ class OpenAIToolSearchAdvisor:
 
         return "Max iterations reached"
 
-
-# =============================================================================
-# OPENAI-COMPATIBLE ADVISOR (WITHOUT TOOL SEARCH - ALL TOOLS)
-# =============================================================================
 
 class OpenAIAllToolsAdvisor:
     """
@@ -212,7 +199,6 @@ class OpenAIAllToolsAdvisor:
 
         self.all_tools: dict[str, Tool] = {}
 
-        # Token tracking
         self.total_input_tokens = 0
         self.total_output_tokens = 0
         self.request_count = 0
@@ -304,17 +290,21 @@ class OpenAIAllToolsAdvisor:
         return "Max iterations reached"
 
 
-# =============================================================================
-# MAIN TEST
-# =============================================================================
+
 
 def main():
     client = OpenAI()
     tools = create_example_tools()
 
+    print("="*70)
+
+
+    print("all tools ")
+
+    print([tool.name for tool in create_example_tools()])
+
     test_query = (
-        "Help me plan what to wear today."
-        # "Please suggest clothing shops that are open right now."
+        "Help me plan what to wear today in miami"
     )
 
     print("=" * 70)
@@ -359,7 +349,7 @@ def main():
         "total_tokens": advisor_all_tools.total_input_tokens + advisor_all_tools.total_output_tokens
     }
 
-    # Summary
+
     print("\n" + "=" * 70)
     print("TOKEN USAGE COMPARISON")
     print("=" * 70)

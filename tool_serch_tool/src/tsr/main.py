@@ -14,8 +14,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Callable, Any
 from enum import Enum
-
-# For vector search (optional - install with: pip install numpy sentence-transformers)
 try:
     import numpy as np
     from sentence_transformers import SentenceTransformer
@@ -23,20 +21,13 @@ try:
 except ImportError:
     VECTOR_SEARCH_AVAILABLE = False
 
-# For Anthropic API (install with: pip install anthropic)
-from anthropic import Anthropic
-
-
-# =============================================================================
-# TOOL DEFINITION
-# =============================================================================
 
 @dataclass
 class Tool:
     """Represents a callable tool with its schema."""
     name: str
     description: str
-    parameters: dict  # JSON Schema for parameters
+    parameters: dict 
     function: Callable[..., Any]
     
     def to_anthropic_schema(self) -> dict:
@@ -55,11 +46,6 @@ class Tool:
         """Execute the tool with given arguments."""
         return self.function(**kwargs)
 
-
-# =============================================================================
-# TOOL SEARCHER - Abstract Interface
-# =============================================================================
-
 class ToolSearcher(ABC):
     """Abstract base class for tool search strategies."""
     
@@ -74,9 +60,6 @@ class ToolSearcher(ABC):
         pass
 
 
-# =============================================================================
-# KEYWORD-BASED SEARCHER (Simple, no dependencies)
-# =============================================================================
 
 class KeywordToolSearcher(ToolSearcher):
     """
@@ -128,10 +111,6 @@ class KeywordToolSearcher(ToolSearcher):
         return results
 
 
-# =============================================================================
-# VECTOR-BASED SEARCHER (Semantic search)
-# =============================================================================
-
 class VectorToolSearcher(ToolSearcher):
     """
     Semantic search using sentence embeddings.
@@ -170,14 +149,10 @@ class VectorToolSearcher(ToolSearcher):
         # Get top results
         top_indices = np.argsort(similarities)[::-1][:max_results]
         
-        results = [self.tools[i] for i in top_indices if similarities[i] > 0.1]
+        results = [self.tools[i] for i in top_indices if similarities[i] > 0.35]
         print(f"[VectorSearcher] Query '{query}' -> {[t.name for t in results]}")
         return results
 
-
-# =============================================================================
-# TOOL SEARCH TOOL ADVISOR
-# =============================================================================
 
 class ToolSearchToolAdvisor:
     """
@@ -365,18 +340,13 @@ class ToolSearchToolAdvisor:
         return "Max iterations reached"
 
 
-# =============================================================================
-# EXAMPLE USAGE
-# =============================================================================
-
 def create_example_tools() -> list[Tool]:
     """Create a sample set of tools for demonstration."""
     
     tools = [
-        # Weather tools
         Tool(
             name="get_current_weather",
-            description="Get the current weather conditions for a specific location including temperature, humidity, and conditions",
+            description="Get the current weather conditions for a specific location",
             parameters={
                 "properties": {
                     "location": {"type": "string", "description": "City name or coordinates"},
@@ -408,7 +378,7 @@ def create_example_tools() -> list[Tool]:
             }
         ),
         
-        # Time tools
+        # time tools
         Tool(
             name="get_current_time",
             description="Get the current date and time for a specific timezone or location",
@@ -425,7 +395,7 @@ def create_example_tools() -> list[Tool]:
             }
         ),
         
-        # Shopping tools
+        # shopping tools
         Tool(
             name="find_clothing_stores",
             description="Find clothing and fashion stores in a specific location that are currently open",
@@ -446,7 +416,7 @@ def create_example_tools() -> list[Tool]:
             }
         ),
         
-        # Database tools
+        # database tools
         Tool(
             name="query_database",
             description="Execute a read-only SQL query against the application database",
@@ -460,7 +430,7 @@ def create_example_tools() -> list[Tool]:
             function=lambda query, limit=100: {"rows": [], "count": 0, "query": query}
         ),
         
-        # Email tools
+        # email tools
         Tool(
             name="send_email",
             description="Send an email to one or more recipients",
@@ -487,7 +457,7 @@ def create_example_tools() -> list[Tool]:
             function=lambda query, folder="inbox": {"results": [], "total": 0}
         ),
         
-        # Calendar tools
+        # calendar tools
         Tool(
             name="get_calendar_events",
             description="Get calendar events for a specific date range",
@@ -515,7 +485,7 @@ def create_example_tools() -> list[Tool]:
             function=lambda title, start, end, attendees=None: {"id": "evt_123", "status": "created"}
         ),
         
-        # File tools
+        # file tools
         Tool(
             name="read_file",
             description="Read contents of a file from the filesystem",
@@ -551,7 +521,7 @@ def create_example_tools() -> list[Tool]:
             function=lambda path: {"files": ["file1.txt", "file2.py"], "dirs": ["subdir"]}
         ),
         
-        # Math/calculation tools
+        # math/calculation tools
         Tool(
             name="calculate",
             description="Perform mathematical calculations",
@@ -685,10 +655,10 @@ def main():
     tools = create_example_tools()
     advisor.register_tools(tools)
     
-    # Test query
+    query = "Help me plan what to wear today in Amsterdam."
     print("\n" + "="*60)
-    print("USER: Help me plan what to wear today in Amsterdam.")
-    print("      Please suggest clothing shops that are open right now.")
+    print(f"USER:{query}")
+    print("Please suggest clothing shops that are open right now.")
     print("="*60)
     
     response = advisor.chat(
